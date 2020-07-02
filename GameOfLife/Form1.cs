@@ -62,17 +62,42 @@ namespace GameOfLife
         {
             graphics.Clear(Color.Black);
 
+            bool[,] newField = new bool[cols, rows];
+
             for (int x = 0; x < cols; x++)
             {
                 for (int y = 0; y < rows; y++)
                 {
-                    if (field[x, y])
+                    int neighbours = CountNeighbours(x, y);
+
+                    bool hasLife = field[x, y];
+
+                    if (!hasLife && neighbours == 3)
+                        newField[x, y] = true;
+                    else
+                    {
+                        if (hasLife && (neighbours < 2 || neighbours > 3))
+                            newField[x, y] = false;
+                        else
+                            newField[x, y] = field[x, y];
+                    }
+
+                    if (hasLife)
                     {
                         // Отрисовка живой клетки
                         graphics.FillRectangle(Brushes.GreenYellow, x * resolution, y * resolution, resolution, resolution);                       
                     }
                 }
             }
+
+            field = newField;
+            pictureBox1.Refresh();
+        }
+
+        private int CountNeighbours(int x, int y)
+        {
+
+            return 0;
         }
 
         private void StopGame()
