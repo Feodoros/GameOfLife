@@ -34,6 +34,16 @@ namespace GameOfLife
             graphics = Graphics.FromImage(pictureBox1.Image);
         }
 
+        private void StopGame()
+        {
+            if (!timer1.Enabled)
+                return;
+
+            timer1.Enabled = false;
+            nudDensity.Enabled = true;
+            nudResolution.Enabled = true;
+        }
+
         // Обработка нажатия кнопки Start
         private void btnStart_Click(object sender, EventArgs e)
         {
@@ -42,7 +52,7 @@ namespace GameOfLife
 
         private void btnStop_Click(object sender, EventArgs e)
         {
-
+            StopGame();
         }
 
         private void timer1_Tick(object sender, EventArgs e)
