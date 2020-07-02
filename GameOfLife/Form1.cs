@@ -50,11 +50,7 @@ namespace GameOfLife
             {
                 for(int y = 0; y < rows; y++)
                 {
-                    field[x, y] = rand.Next((int)nudDensity.Value) == 0;
-                    if (field[x, y])
-                    {
-                        //graphics.FillRectangle(Brushes.GreenYellow, x * resolution, y * resolution, resolution, resolution);
-                    }
+                    field[x, y] = rand.Next((int)nudDensity.Value) == 0;                    
                 }
             }
 
