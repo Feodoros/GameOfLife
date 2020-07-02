@@ -30,6 +30,8 @@ namespace GameOfLife
             if (timer1.Enabled)
                 return;
 
+            currentGeneration = 0;
+
             nudResolution.Enabled = false;
             nudDensity.Enabled = false;
 
@@ -175,5 +177,9 @@ namespace GameOfLife
             return x >= 0 && y >= 0 && x < cols && y < rows;
         }
 
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            Text = "Conway's Game of Life";
+        }
     }
 }
