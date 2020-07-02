@@ -17,6 +17,7 @@ namespace GameOfLife
         private bool[,] field;
         private int rows;
         private int cols;
+        private int currentGeneration = 0;
 
         public Form1()
         {
@@ -92,6 +93,7 @@ namespace GameOfLife
 
             field = newField;
             pictureBox1.Refresh();
+            Text = $"Generation {++currentGeneration}";
         }
 
         private int CountNeighbours(int x, int y)
@@ -102,8 +104,8 @@ namespace GameOfLife
             {
                 for (int j = -1; j < 2; j++)
                 {
-                    int col = x + i;
-                    int row = y + j;
+                    int col = (x + i + cols) % cols;
+                    int row = (y + j + rows) % rows;
 
                     bool isSelfChecking = col == x && row == y;
                     bool hasLife = field[col, row];
@@ -144,6 +146,34 @@ namespace GameOfLife
             NextGeneration();
         }
 
-       
+        private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (!timer1.Enabled)
+                return;
+            
+            if(e.Button == MouseButtons.Left)
+            {
+                var x = e.Location.X / resolution;
+                var y = e.Location.Y / resolution;
+                bool validationPassed = ValidateMousePosition(x, y);
+                if (validationPassed)
+                    field[x, y] = true;
+            }
+
+            if (e.Button == MouseButtons.Right)
+            {
+                var x = e.Location.X / resolution;
+                var y = e.Location.Y / resolution;
+                bool validationPassed = ValidateMousePosition(x, y);
+                if (validationPassed)
+                    field[x, y] = false;
+            }
+        }
+
+        private bool ValidateMousePosition(int x, int y)
+        {
+            return x >= 0 && y >= 0 && x < cols && y < rows;
+        }
+
     }
 }
