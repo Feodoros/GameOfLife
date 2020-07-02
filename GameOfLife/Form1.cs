@@ -14,6 +14,9 @@ namespace GameOfLife
     {
         private int resolution;
         private Graphics graphics;
+        private bool[,] field;
+        private int rows;
+        private int cols;
 
         public Form1()
         {
@@ -32,6 +35,44 @@ namespace GameOfLife
             resolution = (int)nudResolution.Value;
             pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
             graphics = Graphics.FromImage(pictureBox1.Image);
+            
+            rows = pictureBox1.Height / resolution;
+            cols = pictureBox1.Width / resolution;
+
+            field = new bool[cols, rows];
+
+            // Первое поколение
+            Random rand = new Random();
+            for(int x = 0; x < cols; x++)
+            {
+                for(int y = 0; y < rows; y++)
+                {
+                    field[x, y] = rand.Next((int)nudDensity.Value) == 0;
+                    if (field[x, y])
+                    {
+                        //graphics.FillRectangle(Brushes.GreenYellow, x * resolution, y * resolution, resolution, resolution);
+                    }
+                }
+            }
+
+            timer1.Start();
+        }
+
+        private void NextGeneration()
+        {
+            graphics.Clear(Color.Black);
+
+            for (int x = 0; x < cols; x++)
+            {
+                for (int y = 0; y < rows; y++)
+                {
+                    if (field[x, y])
+                    {
+                        // Отрисовка живой клетки
+                        graphics.FillRectangle(Brushes.GreenYellow, x * resolution, y * resolution, resolution, resolution);                       
+                    }
+                }
+            }
         }
 
         private void StopGame()
@@ -50,14 +91,16 @@ namespace GameOfLife
             StartGame();
         }
 
+        // Обработка нажатия кнопки Stop
         private void btnStop_Click(object sender, EventArgs e)
         {
             StopGame();
         }
 
+        // Обработка Таймера
         private void timer1_Tick(object sender, EventArgs e)
         {
-
+            NextGeneration();
         }
 
        
