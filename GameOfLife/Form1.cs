@@ -96,8 +96,24 @@ namespace GameOfLife
 
         private int CountNeighbours(int x, int y)
         {
+            int count = 0;
 
-            return 0;
+            for (int i = -1; i < 2; i++)
+            {
+                for (int j = -1; j < 2; j++)
+                {
+                    int col = x + i;
+                    int row = y + j;
+
+                    bool isSelfChecking = col == x && row == y;
+                    bool hasLife = field[col, row];
+
+                    if (hasLife && !isSelfChecking)
+                        count++;
+                }
+            }
+
+            return count;
         }
 
         private void StopGame()
