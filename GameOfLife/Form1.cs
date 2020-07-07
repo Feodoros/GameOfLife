@@ -14,6 +14,15 @@ namespace GameOfLife
     {
         // TODO: 
         // class Cell with properies int X, int Y, Condition condition
+
+        // TODO:
+        // Infection of cells:
+        // Какая-то вероятность A заразить N клеток из всех Живых каждый ход
+        // Какая-то вероятность B вылечить M клеток из всех Заболевших
+        // Условия: Заболевшая клетка может умереть только от одиночества 
+        //          либо если вокруг нее только живые клетки;
+        //          Живая клетка рядом с заболевшей становится зараженной
+
         private int resolution;
         private Graphics graphics;
         private Condition[,] currentField;
