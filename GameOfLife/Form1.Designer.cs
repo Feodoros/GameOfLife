@@ -38,6 +38,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.labelProgress = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -58,6 +59,7 @@
             // 
             // splitContainer1.Panel1
             // 
+            this.splitContainer1.Panel1.Controls.Add(this.labelProgress);
             this.splitContainer1.Panel1.Controls.Add(this.btnStop);
             this.splitContainer1.Panel1.Controls.Add(this.nudDensity);
             this.splitContainer1.Panel1.Controls.Add(this.label2);
@@ -129,7 +131,7 @@
             this.nudResolution.TabIndex = 2;
             this.nudResolution.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.nudResolution.Value = new decimal(new int[] {
-            3,
+            4,
             0,
             0,
             0});
@@ -170,6 +172,15 @@
             this.timer1.Interval = 40;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
+            // labelProgress
+            // 
+            this.labelProgress.AutoSize = true;
+            this.labelProgress.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.labelProgress.Location = new System.Drawing.Point(21, 284);
+            this.labelProgress.Name = "labelProgress";
+            this.labelProgress.Size = new System.Drawing.Size(0, 17);
+            this.labelProgress.TabIndex = 6;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -203,6 +214,7 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button btnStop;
         private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.Label labelProgress;
     }
 }
 
