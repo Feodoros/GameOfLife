@@ -14,10 +14,12 @@ namespace GameOfLife
     {
         private int resolution;
         private Graphics graphics;
-        private bool[,] field;
+        private int[,] currentField;
+        private int[,] newField;
         private int rows;
         private int cols;
         private int currentGeneration = 0;
+        private Condition condition;
 
         public Form1()
         {
@@ -42,7 +44,7 @@ namespace GameOfLife
             rows = pictureBox1.Height / resolution;
             cols = pictureBox1.Width / resolution;
 
-            field = new bool[cols, rows];
+            currentField = new bool[cols, rows];
 
             // Первое поколение
             Random rand = new Random();
@@ -50,7 +52,7 @@ namespace GameOfLife
             {
                 for(int y = 0; y < rows; y++)
                 {
-                    field[x, y] = rand.Next((int)nudDensity.Value) == 0;                    
+                    currentField[x, y] = rand.Next((int)nudDensity.Value) == 0;                    
                 }
             }
 
@@ -69,7 +71,7 @@ namespace GameOfLife
                 {
                     int neighbours = CountNeighbours(x, y);
 
-                    bool hasLife = field[x, y];
+                    bool hasLife = currentField[x, y];
 
                     if (!hasLife && neighbours == 3)
                         newField[x, y] = true;
@@ -78,7 +80,7 @@ namespace GameOfLife
                         if (hasLife && (neighbours < 2 || neighbours > 3))
                             newField[x, y] = false;
                         else
-                            newField[x, y] = field[x, y];
+                            newField[x, y] = currentField[x, y];
                     }
 
                     if (hasLife)
@@ -89,7 +91,7 @@ namespace GameOfLife
                 }
             }
 
-            field = newField;
+            currentField = newField;
             pictureBox1.Refresh();
             Text = $"Generation {++currentGeneration}";
         }
@@ -106,7 +108,7 @@ namespace GameOfLife
                     int row = (y + j + rows) % rows;
 
                     bool isSelfChecking = col == x && row == y;
-                    bool hasLife = field[col, row];
+                    bool hasLife = currentField[col, row];
 
                     if (hasLife && !isSelfChecking)
                         count++;
@@ -155,7 +157,7 @@ namespace GameOfLife
                 var y = e.Location.Y / resolution;
                 bool validationPassed = ValidateMousePosition(x, y);
                 if (validationPassed)
-                    field[x, y] = true;
+                    currentField[x, y] = true;
             }
 
             if (e.Button == MouseButtons.Right)
@@ -164,7 +166,7 @@ namespace GameOfLife
                 var y = e.Location.Y / resolution;
                 bool validationPassed = ValidateMousePosition(x, y);
                 if (validationPassed)
-                    field[x, y] = false;
+                    currentField[x, y] = false;
             }
         }
 
