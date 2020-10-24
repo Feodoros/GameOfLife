@@ -23,10 +23,19 @@ namespace GameOfLife
         //          либо если вокруг нее только живые клетки;
         //          Живая клетка рядом с заболевшей становится зараженной
 
+
+        /// <summary>
+        /// Новая логика -- заболевание
+        /// Живая любая клетка может заболеть и стать красной с вероятностью 5%
+        /// Если рядом с живой клеткой есть заболевшая, то шанс заболевания у текущей увеличивается на 5%
+        /// Правила жизни для зараженной клетки те же что и для здорвой
+        /// Любая больная клетка может стать здоровой с вероятностью 10% 
+        /// </summary>
+
         private int resolution;
         private Graphics graphics;
-        private Condition[,] currentField;
-        private Condition[,] newField;
+        private Cell[,] currentField;
+        private Cell[,] newField;
         private int rows;
         private int cols;
         private int currentGeneration = 0;
@@ -54,7 +63,7 @@ namespace GameOfLife
             rows = pictureBox1.Height / resolution;
             cols = pictureBox1.Width / resolution;
 
-            newField = currentField = new Condition[cols, rows];
+            currentField = new Cell[cols, rows];
            
             // Первое поколение
             Random rand = new Random();
@@ -62,7 +71,17 @@ namespace GameOfLife
             {                
                 for (int y = 0; y < rows; y++)
                 {
-                    currentField[x, y] = (Condition)Convert.ToInt32(rand.Next((int)nudDensity.Value) == 0);                    
+                    Condition condition;
+                    int prob = rand.Next(0, 100);
+                    if (prob <= 5)
+                    {
+                        condition = Condition.Infectious;
+                    }
+                    else
+                    {
+                        condition = (Condition)Convert.ToInt32(rand.Next((int)nudDensity.Value) == 0);
+                    }               
+                    currentField[x, y] = new Cell(x, y, condition);
                 }
             }
 
@@ -77,31 +96,39 @@ namespace GameOfLife
 
             graphics.Clear(Color.Black);
 
-            newField = new Condition[cols, rows];
+            newField = new Cell[cols, rows];
 
             for (int x = 0; x < cols; x++)
             {
                 for (int y = 0; y < rows; y++)
-                {
-                    int neighbours = CountNeighbours(x, y);
+                {       
+                    
+                    int neighboursCount = CountNeighbours(x, y);
 
-                    bool hasLife = currentField[x, y] == Condition.Alived;
+                    bool hasLife = currentField[x, y].Condition == Condition.Alived;
 
-                    if (!hasLife && neighbours == 3)
-                    {
-                        newField[x, y] = Condition.Alived;
+                    if (!hasLife && neighboursCount == 3)
+                    {                       
+                        newField[x, y] = new Cell(x, y, Condition.Alived); ;
                         alivedNewCells++;
                     }                        
                     else
                     {
-                        if (hasLife && (neighbours < 2 || neighbours > 3))
-                            newField[x, y] = Condition.NotAlived;
+                        if (hasLife && (neighboursCount < 2 || neighboursCount > 3))
+                            newField[x, y] = new Cell(x, y, Condition.NotAlived);                       
                         else
                         {
                             newField[x, y] = currentField[x, y];
                             if (hasLife)
                                 alivedNewCells++;
                         }                            
+                    }
+                    
+                    if (currentField[x, y].Condition == Condition.Infectious)
+                    {
+                        // Отрисовка заболевшей клетки
+                        graphics.FillRectangle(Brushes.Red, x * resolution, y * resolution, resolution, resolution);
+                        alivedCurrentCells++;
                     }
 
                     if (hasLife)
@@ -144,7 +171,7 @@ namespace GameOfLife
                     int row = (y + j + rows) % rows;
                     
                     bool isSelfChecking = col == x && row == y;
-                    bool hasLife = currentField[col, row] == Condition.Alived;
+                    bool hasLife = currentField[col, row].Condition == Condition.Alived;
 
                     if (hasLife && !isSelfChecking)
                         count++;
@@ -194,7 +221,7 @@ namespace GameOfLife
                 var y = e.Location.Y / resolution;
                 bool validationPassed = ValidateMousePosition(x, y);
                 if (validationPassed)
-                    currentField[x, y] = Condition.Alived;
+                    currentField[x, y].Condition = Condition.Alived;
             }
 
             if (e.Button == MouseButtons.Right)
@@ -203,7 +230,7 @@ namespace GameOfLife
                 var y = e.Location.Y / resolution;
                 bool validationPassed = ValidateMousePosition(x, y);
                 if (validationPassed)
-                    currentField[x, y] = Condition.NotAlived;
+                    currentField[x, y].Condition = Condition.NotAlived;
             }
         }
 

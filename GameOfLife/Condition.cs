@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace GameOfLife
+﻿namespace GameOfLife
 {
     /// <summary>
     /// Возможные состояния клетки
@@ -12,8 +6,7 @@ namespace GameOfLife
     public enum Condition
     {
         NotAlived = 0,
-        Alived = 1, 
-        Stable = 2,
-        Infectious = 3
+        Alived = 1,         
+        Infectious = 2
     }
 }
