@@ -8,7 +8,7 @@ using System.Windows.Forms;
 namespace GameOfLife
 {
     /// <summary>
-    /// Интерфесй, отвечающий за поведение клетки
+    /// Класс, отвечающий за поведение клетки
     /// </summary>
     class Cell
     {

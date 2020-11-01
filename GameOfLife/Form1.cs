@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -32,6 +33,8 @@ namespace GameOfLife
         /// Любая больная клетка может стать здоровой с вероятностью 10% 
         /// </summary>
 
+        private const float lineWidth = 0.1f;
+
         private int resolution;
         private Graphics graphics;
         private Cell[,] currentField;
@@ -39,104 +42,104 @@ namespace GameOfLife
         private int rows;
         private int cols;
         private int currentGeneration = 0;
-        
+        private bool isPlaying = false;
+
         public Form1()
         {
             InitializeComponent();
-        }
-
-        // Началло игры
-        private void StartGame()
-        {
-            if (timer1.Enabled)
-                return;
-
-            currentGeneration = 0;
-
-            nudResolution.Enabled = false;
-            nudDensity.Enabled = false;
 
             resolution = (int)nudResolution.Value;
-            pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-            graphics = Graphics.FromImage(pictureBox1.Image);
-            
+
             rows = pictureBox1.Height / resolution;
             cols = pictureBox1.Width / resolution;
 
+            pictureBox1.BackColor = Color.Black;
+            pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+            graphics = Graphics.FromImage(pictureBox1.Image);
+
+            currentGeneration = 0;
             currentField = new Cell[cols, rows];
-           
+        }
+
+        // Первое рандомное поколение
+        private void RandomFirstGeneration()
+        {
+            currentGeneration = 0;
+            currentField = new Cell[cols, rows];
+
             // Первое поколение
             Random rand = new Random();
-            for(int x = 0; x < cols; x++)
-            {                
+            for (int x = 0; x < cols; x++)
+            {
                 for (int y = 0; y < rows; y++)
                 {
                     Condition condition;
                     int prob = rand.Next(0, 100);
-                    if (prob <= 5)
+
+                    condition = (Condition)Convert.ToInt32(rand.Next((int)nudDensity.Value) == 0);
+
+                    // Вероятность стать зараженной клеткой 5%
+                    if (condition == Condition.Alived && prob <= 5)
                     {
                         condition = Condition.Infectious;
                     }
-                    else
-                    {
-                        condition = (Condition)Convert.ToInt32(rand.Next((int)nudDensity.Value) == 0);
-                    }               
+
                     currentField[x, y] = new Cell(x, y, condition);
                 }
             }
-
-            timer1.Start();
         }
 
         // Логика генерации нового поколения
         private void NextGeneration()
         {
-            int alivedCurrentCells = 0;
+            int alivedCurrentCells = 1;
             int alivedNewCells = 0;
-
-            graphics.Clear(Color.Black);
 
             newField = new Cell[cols, rows];
 
-            for (int x = 0; x < cols; x++)
+            for (int x = 1; x < cols-1; x++)
             {
-                for (int y = 0; y < rows; y++)
-                {       
-                    
+                for (int y = 1; y < rows-1; y++)
+                {
+
                     int neighboursCount = CountNeighbours(x, y);
 
-                    bool hasLife = currentField[x, y].Condition == Condition.Alived;
+                    bool hasLife = currentField[x, y]?.Condition == Condition.Alived;
 
                     if (!hasLife && neighboursCount == 3)
-                    {                       
+                    {
                         newField[x, y] = new Cell(x, y, Condition.Alived); ;
                         alivedNewCells++;
-                    }                        
+                    }
                     else
                     {
                         if (hasLife && (neighboursCount < 2 || neighboursCount > 3))
-                            newField[x, y] = new Cell(x, y, Condition.NotAlived);                       
+                            newField[x, y] = new Cell(x, y, Condition.NotAlived);
                         else
                         {
                             newField[x, y] = currentField[x, y];
                             if (hasLife)
                                 alivedNewCells++;
-                        }                            
+                        }
                     }
-                    
-                    if (currentField[x, y].Condition == Condition.Infectious)
-                    {
-                        // Отрисовка заболевшей клетки
-                        graphics.FillRectangle(Brushes.Red, x * resolution, y * resolution, resolution, resolution);
+
+                    /*if (currentField[x, y].Condition == Condition.Infectious)
+                    {                        
                         alivedCurrentCells++;
                     }
 
                     if (hasLife)
                     {
-                        // Отрисовка живой клетки
-                        graphics.FillRectangle(Brushes.GreenYellow, x * resolution, y * resolution, resolution, resolution);
                         alivedCurrentCells++;
-                    }
+                    }                   
+
+                    if (currentField[x, y].Condition == Condition.NotAlived)
+                    {
+                        // Отрисовка живой клетки
+                        graphics.FillRectangle(Brushes.Black, x * resolution + lineWidth,
+                            y * resolution + lineWidth, resolution - lineWidth, resolution - lineWidth);
+                        alivedCurrentCells++;
+                    }*/
                 }
             }
 
@@ -145,16 +148,15 @@ namespace GameOfLife
                 labelProgress.Text = $"All cells are died :(";
                 StopGame();
                 pictureBox1.Refresh();
-                btnStop.Visible = false;
-                MessageBox.Show("Все клетки померли :(", "Игра окончена", MessageBoxButtons.OK, MessageBoxIcon.Information);               
+                btnClear.Visible = false;
+                MessageBox.Show("Все клетки померли :(", "Игра окончена", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
                 double progress = alivedNewCells * 100 / alivedCurrentCells;
                 labelProgress.Text = $"Progress: {progress} %";
-
+                DrawCells();
                 currentField = newField;
-                pictureBox1.Refresh();
                 Text = $"Generation {++currentGeneration}";
             }
         }
@@ -169,12 +171,15 @@ namespace GameOfLife
                 {
                     int col = (x + i + cols) % cols;
                     int row = (y + j + rows) % rows;
-                    
-                    bool isSelfChecking = col == x && row == y;
-                    bool hasLife = currentField[col, row].Condition == Condition.Alived;
 
-                    if (hasLife && !isSelfChecking)
-                        count++;
+                    bool isSelfChecking = col == x && row == y;
+                    try
+                    {
+                        bool hasLife = currentField[col, row]?.Condition == Condition.Alived;
+                        if (hasLife && !isSelfChecking)
+                            count++;
+                    }
+                    catch { continue; }                    
                 }
             }
 
@@ -183,25 +188,16 @@ namespace GameOfLife
 
         private void StopGame()
         {
-            if (!timer1.Enabled)
-                return;
+            currentGeneration = 0;
+            currentField = new Cell[cols, rows];
+
+            graphics.Clear(Color.Black);
+
+            DrawLines();
 
             timer1.Enabled = false;
             nudDensity.Enabled = true;
             nudResolution.Enabled = true;
-        }
-
-        // Обработка нажатия кнопки Start
-        private void btnStart_Click(object sender, EventArgs e)
-        {
-            StartGame();
-            btnStop.Visible = true; 
-        }
-
-        // Обработка нажатия кнопки Stop
-        private void btnStop_Click(object sender, EventArgs e)
-        {
-            StopGame();
         }
 
         // Обработка Таймера
@@ -212,16 +208,19 @@ namespace GameOfLife
 
         private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
         {
-            if (!timer1.Enabled)
-                return;
-            
-            if(e.Button == MouseButtons.Left)
+            /*if (!timer1.Enabled)
+                return;*/
+
+            if (e.Button == MouseButtons.Left)
             {
                 var x = e.Location.X / resolution;
                 var y = e.Location.Y / resolution;
                 bool validationPassed = ValidateMousePosition(x, y);
                 if (validationPassed)
-                    currentField[x, y].Condition = Condition.Alived;
+                {
+                    Cell cell = new Cell(x, y, Condition.Alived);
+                    currentField[x, y] = cell;
+                }
             }
 
             if (e.Button == MouseButtons.Right)
@@ -230,8 +229,12 @@ namespace GameOfLife
                 var y = e.Location.Y / resolution;
                 bool validationPassed = ValidateMousePosition(x, y);
                 if (validationPassed)
-                    currentField[x, y].Condition = Condition.NotAlived;
+                {
+                    Cell cell = new Cell(x, y, Condition.NotAlived);
+                    currentField[x, y] = cell;
+                }
             }
+            DrawCells();
         }
 
         private bool ValidateMousePosition(int x, int y)
@@ -242,6 +245,151 @@ namespace GameOfLife
         private void Form1_Load(object sender, EventArgs e)
         {
             Text = "Conway's Game of Life";
+        }
+
+        private void checkBoxLines_CheckStateChanged(object sender, EventArgs e)
+        {
+            DrawLines();
+        }
+
+        private void DrawCells()
+        {
+            for (int x = 0; x < cols; x++)
+            {
+                for (int y = 0; y < rows; y++)
+                {
+                    if (currentField[x, y] == null)
+                    {
+                        continue;
+                    }
+                    try
+                    {
+                        // Отрисовка заболевшей клетки
+                        if (currentField[x, y].Condition == Condition.Infectious)
+                        {
+                            graphics.FillRectangle(Brushes.Red, x * resolution + lineWidth,
+                                y * resolution + lineWidth, resolution - lineWidth, resolution - lineWidth);
+                        }
+                    }
+                    catch (Exception ex) { Console.WriteLine(ex.Message); continue; }
+
+                    try
+                    {
+                        // Отрисовка живой клетки
+                        if (currentField[x, y].Condition == Condition.Alived)
+                        {
+                            graphics.FillRectangle(Brushes.GreenYellow, x * resolution + lineWidth,
+                                y * resolution + lineWidth, resolution - lineWidth, resolution - lineWidth);
+                        }
+
+                    }
+                    catch (Exception ex) { Console.WriteLine(ex.Message); continue; }
+
+                    try
+                    {
+                        // Отрисовка живой клетки
+                        if (currentField[x, y].Condition == Condition.NotAlived)
+                        {
+                            graphics.FillRectangle(Brushes.Black, x * resolution + lineWidth,
+                                y * resolution + lineWidth, resolution - lineWidth, resolution - lineWidth);
+                        }
+                    }
+                    catch (Exception ex) { Console.WriteLine(ex.Message); continue; }
+                }
+            }
+            pictureBox1.Refresh();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            if (!isPlaying)
+            {
+                timer1.Start();
+                btnPause.Text = "Pause";
+                isPlaying = true;
+                btnRndFstGen.Enabled = false;
+                nudDensity.Enabled = false;
+                nudResolution.Enabled = false;
+                btnClear.Enabled = false;
+            }
+            else
+            {
+                timer1.Stop();
+                btnPause.Text = "Play";
+                isPlaying = false;
+                btnRndFstGen.Enabled = true;
+                nudDensity.Enabled = true;
+                nudResolution.Enabled = true;
+                btnClear.Enabled = true;
+            }
+        }
+
+        private void btnRndFstGen_Click(object sender, EventArgs e)
+        {
+            RandomFirstGeneration();
+            DrawCells();
+        }
+
+        private void nudResolution_ValueChanged(object sender, EventArgs e)
+        {
+            resolution = (int)nudResolution.Value;
+
+            rows = pictureBox1.Height / resolution;
+            cols = pictureBox1.Width / resolution;
+
+            graphics.Clear(Color.Black);
+
+            DrawLines();
+        }
+
+        private void DrawLines()
+        {
+            if (checkBoxLines.Checked)
+            {
+                nudResolution.Enabled = false;
+                nudDensity.Enabled = false;
+
+                // Отрисовка линий
+                for (int i = 0; i < cols + 1; i++)
+                {
+                    graphics.DrawLine(new Pen(Color.FromArgb(25, Color.White), lineWidth), resolution * i, 0, resolution * i, pictureBox1.Height);
+                }
+                for (int i = 0; i < rows + 1; i++)
+                {
+                    graphics.DrawLine(new Pen(Color.FromArgb(25, Color.White), lineWidth), 0, resolution * i, pictureBox1.Width, resolution * i);
+                }
+
+                nudResolution.Enabled = true;
+                nudDensity.Enabled = true;
+
+                pictureBox1.Refresh();
+            }
+            else
+            {
+                nudResolution.Enabled = false;
+                nudDensity.Enabled = false;
+
+                // Убираем линии
+                for (int i = 0; i < cols + 1; i++)
+                {
+                    graphics.DrawLine(new Pen(Color.Black, lineWidth), resolution * i, 0, resolution * i, pictureBox1.Height);
+
+                }
+                for (int i = 0; i < rows + 1; i++)
+                {
+                    graphics.DrawLine(new Pen(Color.Black, lineWidth), 0, resolution * i, pictureBox1.Width, resolution * i);
+                }
+
+                nudResolution.Enabled = true;
+                nudDensity.Enabled = true;
+
+                pictureBox1.Refresh();
+            }
+        }
+
+        private void btnClear_Click(object sender, EventArgs e)
+        {
+            StopGame();
         }
     }
 }
